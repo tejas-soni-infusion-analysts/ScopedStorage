@@ -4,24 +4,85 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btnMediaStore"
-        android:layout_width="wrap_content"
+    <TextView
+        style="@style/TextAppearance.MaterialComponents.Headline4"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="With MediaStore"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="Working with\nscoped storage"
+        android:textColor="@color/black"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btnInPackage"
-        android:layout_width="wrap_content"
+        android:id="@+id/btnMediaStore"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:text="With MediaStore"
+        app:layout_constraintBottom_toTopOf="@id/btnInPackage"
+        app:layout_constraintEnd_toEndOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintStart_toStartOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <Button
+        android:id="@+id/btnInPackage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:text="With ContextWrapper"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnFilesDirectory"
+        app:layout_constraintEnd_toEndOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintStart_toStartOf="@id/btnExternalFilesDirectory"
         app:layout_constraintTop_toBottomOf="@id/btnMediaStore" />
 
+    <Button
+        android:id="@+id/btnFilesDirectory"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="With Files Directory"
+        app:layout_constraintBottom_toTopOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintEnd_toEndOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintStart_toStartOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintTop_toBottomOf="@id/btnInPackage" />
+
+    <Button
+        android:id="@+id/btnExternalFilesDirectory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="With External Files Directory"
+        app:layout_constraintBottom_toTopOf="@id/btnInExternalDirectory"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnFilesDirectory" />
+
+    <Button
+        android:id="@+id/btnInExternalDirectory"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="In External Directory"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintStart_toStartOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintTop_toBottomOf="@id/btnExternalFilesDirectory" />
+
+    <TextView
+        android:id="@+id/tvPath"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:layout_margin="15dp"
+        android:padding="10dp"
+        style="@style/TextAppearance.MaterialComponents.Body2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
