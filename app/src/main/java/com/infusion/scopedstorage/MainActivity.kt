@@ -2,6 +2,7 @@ package com.infusion.scopedstorage
 
 import android.Manifest
 import android.R.attr.mimeType
+import android.app.Dialog
 import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
@@ -15,8 +16,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker.PERMISSION_GRANTED
+import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.infusion.scopedstorage.databinding.ActivityMainBinding
+import com.infusion.scopedstorage.databinding.DialogImageBinding
 import java.io.File
 import java.io.FileOutputStream
 
@@ -106,18 +109,33 @@ class MainActivity : AppCompatActivity() {
         try {
             val path = fullPath + File.separator + "Demo.jpg"
             val newFile = File(path)
+            binding.tvPath.text = "Created at: $path"
             if (newFile.exists().not()) {
-                val inputStream = resources.openRawResource(R.drawable.ic_launcher_background)
+                val inputStream = resources.openRawResource(R.raw.image)
                 val outputStream = FileOutputStream(newFile)
                 val data = ByteArray(inputStream.available())
                 inputStream.read(data)
                 outputStream.write(data)
                 inputStream.close()
                 outputStream.close()
-            }
+                showImageDialog(path)
+            } else showImageDialog(path)
         } catch (e: Exception) {
-            toast(e.localizedMessage)
+            toast(e.localizedMessage?:"Something went wrong")
         }
+    }
+
+    private fun showImageDialog(path: String) {
+        val dialog = Dialog(this)
+        dialog.setCanceledOnTouchOutside(false)
+        val binding = DialogImageBinding.inflate(dialog.layoutInflater)
+        dialog.setContentView(binding.root)
+        binding.tvClose.setOnClickListener {
+//            File(path).delete()
+            dialog.dismiss()
+        }
+        Glide.with(dialog.context).load(path).into(binding.ivImage)
+        dialog.show()
     }
 
     private fun requestPermission() {
@@ -184,7 +202,8 @@ class MainActivity : AppCompatActivity() {
                 setTitle("Permission Required")
                 setMessage("Please accept permission to let us save file on your device.")
                 setPositiveButton("Ok") { _, _ ->
-                    requestPermission()
+//                    requestPermission()
+                    Toast.makeText(this@MainActivity, "Please try again", Toast.LENGTH_SHORT).show()
                 }
                 setNegativeButton("Cancel") { _, _ ->
                     Toast.makeText(this@MainActivity, "Please try again", Toast.LENGTH_SHORT).show()
@@ -196,7 +215,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setPath(path: String) {
-        binding.tvPath.text = "Created at: $path"
         storeFile(path)
     }
 
