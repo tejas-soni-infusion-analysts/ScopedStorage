@@ -36,24 +36,40 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpClickListener() {
         binding.btnMediaStore.setOnClickListener {
-            val resolver = contentResolver
-            val contentValues = ContentValues()
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaStore")
-            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
-                Environment.DIRECTORY_DOWNLOADS)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = contentResolver
+                val contentValues = ContentValues()
+                contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaStore")
+                contentValues.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                contentValues.put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_DOWNLOADS
+                )
 
-            val uri: Uri? =
-                resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
-            uri?.let {
-                val path = FileUriUtils.getRealPath(this, uri)
-                val newFile = File(path ?: "")
+                val uri: Uri? =
+                    resolver.insert(
+                        MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
+                        contentValues
+                    )
+                uri?.let {
+                    val path = FileUriUtils.getRealPath(this, uri)
+                    val newFile = File(path ?: "")
+                    if (newFile.exists().not()) {
+                        newFile.mkdirs()
+                    }
+                    setPath(path ?: "Something went wrong")
+                } ?: run { toast() }
+
+            } else {
+                val newFile =
+                    File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + File.separator + "MediaStore")
                 if (newFile.exists().not()) {
-                    newFile.mkdirs()
-                }
-                setPath(path ?: "Something went wrong")
-            } ?: run { toast() }
-
+                    if (newFile.mkdirs()) {
+                        setPath(newFile.absolutePath)
+                    } else toast()
+                } else
+                    setPath(newFile.absolutePath)
+            }
         }
 
         binding.btnInPackage.setOnClickListener {
@@ -94,8 +110,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnInExternalDirectory.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.MANAGE_EXTERNAL_STORAGE) == PERMISSION_GRANTED
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.MANAGE_EXTERNAL_STORAGE
+                ) == PERMISSION_GRANTED
             ) {
                 checkForFullAccess()
             } else {
@@ -121,7 +139,7 @@ class MainActivity : AppCompatActivity() {
                 showImageDialog(path)
             } else showImageDialog(path)
         } catch (e: Exception) {
-            toast(e.localizedMessage?:"Something went wrong")
+            toast(e.localizedMessage ?: "Something went wrong")
         }
     }
 
@@ -139,8 +157,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestPermission() {
-        requestPermissionLauncher.launch(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE))
+        requestPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        )
     }
 
     private fun checkForFullAccess() {
