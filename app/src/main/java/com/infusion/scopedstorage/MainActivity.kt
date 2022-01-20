@@ -61,14 +61,26 @@ class MainActivity : AppCompatActivity() {
                 } ?: run { toast() }
 
             } else {
-                val newFile =
-                    File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + File.separator + "MediaStore")
-                if (newFile.exists().not()) {
-                    if (newFile.mkdirs()) {
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    ) == PERMISSION_GRANTED
+                ) {
+                    val newFile =
+                        File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + File.separator + "MediaStore")
+                    if (newFile.exists().not()) {
+                        if (newFile.mkdirs()) {
+                            setPath(newFile.absolutePath)
+                        } else toast()
+                    } else
                         setPath(newFile.absolutePath)
-                    } else toast()
-                } else
-                    setPath(newFile.absolutePath)
+                } else {
+                    requestPermission()
+
+                }
             }
         }
 
