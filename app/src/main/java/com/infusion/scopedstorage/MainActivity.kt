@@ -3,6 +3,7 @@ package com.infusion.scopedstorage
 import android.Manifest
 import android.R.attr.mimeType
 import android.app.Dialog
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
@@ -26,6 +27,7 @@ import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val filesArray = arrayListOf<ImageModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,28 +39,32 @@ class MainActivity : AppCompatActivity() {
     private fun setUpClickListener() {
         binding.btnMediaStore.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val resolver = contentResolver
-                val contentValues = ContentValues()
-                contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaStore")
-                contentValues.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                contentValues.put(
-                    MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_DOWNLOADS
-                )
-
-                val uri: Uri? =
-                    resolver.insert(
-                        MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
-                        contentValues
+                    val resolver = contentResolver
+                    val contentValues = ContentValues()
+                    contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaStore")
+                    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                    contentValues.put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_DOWNLOADS
                     )
-                uri?.let {
-                    val path = FileUriUtils.getRealPath(this, uri)
-                    val newFile = File(path ?: "")
-                    if (newFile.exists().not()) {
-                        newFile.mkdirs()
-                    }
-                    setPath(path ?: "Something went wrong")
-                } ?: run { toast() }
+                    val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + File.separator + "MediaStore")
+                    if (directory.exists().not()) {
+                        val uri: Uri? =
+                            resolver.insert(
+                                MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
+                                contentValues
+                            )
+                        uri?.let {
+                            val path = FileUriUtils.getRealPath(this, uri)
+                            val newFile = File(path ?: "")
+                            if (newFile.exists().not()) {
+                                newFile.mkdirs()
+                            }
+                            setPath(path ?: "Something went wrong")
+                        } ?: run { toast() }
+                    } else {
+                        setPath(directory.absolutePath)
+                }
 
             } else {
                 if (ContextCompat.checkSelfPermission(
@@ -136,26 +142,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun storeFile(fullPath: String) {
+        val path = fullPath + File.separator
+        val imageArray = arrayOf(R.raw.image,R.raw.image2,R.raw.image3)
+        filesArray.clear()
+        for (i in 0..2){
+            filesArray.add(ImageModel(path = path+"Demo$i.jpg", imageId=imageArray[i]))
+        }
         try {
-            val path = fullPath + File.separator + "Demo.jpg"
-            val newFile = File(path)
-            binding.tvPath.text = "Created at: $path"
-            if (newFile.exists().not()) {
-                val inputStream = resources.openRawResource(R.raw.image)
-                val outputStream = FileOutputStream(newFile)
-                val data = ByteArray(inputStream.available())
-                inputStream.read(data)
-                outputStream.write(data)
-                inputStream.close()
-                outputStream.close()
-                showImageDialog(path)
-            } else showImageDialog(path)
-        } catch (e: Exception) {
-            toast(e.localizedMessage ?: "Something went wrong")
+            filesArray.forEachIndexed { index, imageModel ->
+                val newFile = File(imageModel.path)
+                binding.tvPath.text = "Created at: $fullPath"
+                if (newFile.exists().not()) {
+                    newFile.createNewFile()
+//                    val inputStream = resources.openRawResource(imageModel.imageId)
+//                    val outputStream = FileOutputStream(newFile)
+//                    val data = ByteArray(inputStream.available())
+//                    inputStream.read(data)
+//                    outputStream.write(data)
+//                    inputStream.close()
+//                    outputStream.close()
+//                    if (index == 2) {
+//                        showImageDialog()
+//                    }
+                } else {
+                    if (index == 2) {
+                        showImageDialog()
+                    }
+                }
+            }
+            } catch (e: Exception) {
+                toast(e.localizedMessage ?: "Something went wrong")
+
         }
     }
 
-    private fun showImageDialog(path: String) {
+    private fun showImageDialog() {
         val dialog = Dialog(this)
         dialog.setCanceledOnTouchOutside(false)
         val binding = DialogImageBinding.inflate(dialog.layoutInflater)
@@ -164,7 +185,9 @@ class MainActivity : AppCompatActivity() {
 //            File(path).delete()
             dialog.dismiss()
         }
-        Glide.with(dialog.context).load(path).into(binding.ivImage)
+        Glide.with(dialog.context).load(filesArray[0].path).into(binding.ivImage)
+        Glide.with(dialog.context).load(filesArray[1].path).into(binding.ivImage2)
+        Glide.with(dialog.context).load(filesArray[2].path).into(binding.ivImage3)
         dialog.show()
     }
 
@@ -206,6 +229,42 @@ class MainActivity : AppCompatActivity() {
             }
         } else setPath(path)
     }
+
+//    private fun getExistingImageUriOrNullQ(): Uri? {
+//        var imageUri : Uri? = null
+//        val projection = arrayOf(
+//            MediaStore.MediaColumns._ID,
+//            MediaStore.MediaColumns.DISPLAY_NAME,   // unused (for verification use only)
+//            MediaStore.MediaColumns.RELATIVE_PATH,  // unused (for verification use only)
+//        )
+//        // take note of the / after OLArt
+//        val selection = "${MediaStore.MediaColumns.RELATIVE_PATH}='${Environment.DIRECTORY_DOWNLOADS}' AND ${MediaStore.MediaColumns.DISPLAY_NAME}='MediaStore'"
+//
+//
+//        contentResolver.query(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
+//            projection, selection, null, null ).use { c ->
+//            if (c != null && c.count >= 1) {
+//
+//                print("has cursor result")
+//                c.moveToFirst().let {
+//
+//                    val id = c.getLong(c.getColumnIndexOrThrow(MediaStore.MediaColumns._ID) )
+//                    val displayName = c.getString(c.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME) )
+//                    val relativePath = c.getString(c.getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH) )
+////                    lastModifiedDate = c.getLong(c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED) )
+//
+//                    imageUri = ContentUris.withAppendedId(
+//                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,  id)
+//
+////                    print("image uri update $displayName $relativePath $imageUri ($lastModifiedDate)")
+//
+//                    return imageUri
+//                }
+//            }
+//        }
+//        print("image not created yet")
+//        return null
+//    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
