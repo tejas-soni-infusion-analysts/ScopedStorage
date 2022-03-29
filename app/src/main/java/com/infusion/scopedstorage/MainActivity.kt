@@ -28,6 +28,8 @@ import java.io.FileOutputStream
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val filesArray = arrayListOf<ImageModel>()
+    private val imageArray = arrayOf(R.raw.image,R.raw.image2,R.raw.image3)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,32 +41,39 @@ class MainActivity : AppCompatActivity() {
     private fun setUpClickListener() {
         binding.btnMediaStore.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val resolver = contentResolver
-                    val contentValues = ContentValues()
-                    contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaStore")
-                    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                    contentValues.put(
-                        MediaStore.MediaColumns.RELATIVE_PATH,
-                        Environment.DIRECTORY_DOWNLOADS
+                val resolver = contentResolver
+                val contentValues = ContentValues()
+                contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, System.currentTimeMillis().toString())
+                contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                contentValues.put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    Environment.DIRECTORY_DOWNLOADS + File.separator + "Videosss"
+                )
+
+                val uri: Uri? =
+                    resolver.insert(
+                        MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
+                        contentValues
                     )
-                    val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + File.separator + "MediaStore")
-                    if (directory.exists().not()) {
-                        val uri: Uri? =
-                            resolver.insert(
-                                MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
-                                contentValues
-                            )
-                        uri?.let {
-                            val path = FileUriUtils.getRealPath(this, uri)
-                            val newFile = File(path ?: "")
-                            if (newFile.exists().not()) {
-                                newFile.mkdirs()
-                            }
-                            setPath(path ?: "Something went wrong")
-                        } ?: run { toast() }
-                    } else {
-                        setPath(directory.absolutePath)
-                }
+                uri?.let {
+                    val path = FileUriUtils.getRealPath(this, uri)
+                    val newFile = File(path ?: "")
+                    filesArray.clear()
+                    filesArray.add(ImageModel(path = newFile.absolutePath, imageId = imageArray[0]))
+                    val inputStream = resources.openRawResource(imageArray[0])
+                    resolver.openOutputStream(uri)
+                    val outputStream = FileOutputStream(newFile)
+                    val data = ByteArray(inputStream.available())
+                    inputStream.read(data)
+                    outputStream.write(data)
+                    inputStream.close()
+                    outputStream.close()
+                    showImageDialog()
+//                     if (newFile.exists().not()) {
+//                         newFile.mkdirs()
+//                     }
+//                     setPath(path ?: "Something went wrong")
+                } ?: run { toast() }
 
             } else {
                 if (ContextCompat.checkSelfPermission(
@@ -88,6 +97,7 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }
+
         }
 
         binding.btnInPackage.setOnClickListener {
@@ -143,7 +153,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun storeFile(fullPath: String) {
         val path = fullPath + File.separator
-        val imageArray = arrayOf(R.raw.image,R.raw.image2,R.raw.image3)
         filesArray.clear()
         for (i in 0..2){
             filesArray.add(ImageModel(path = path+"Demo$i.jpg", imageId=imageArray[i]))
@@ -153,17 +162,16 @@ class MainActivity : AppCompatActivity() {
                 val newFile = File(imageModel.path)
                 binding.tvPath.text = "Created at: $fullPath"
                 if (newFile.exists().not()) {
-                    newFile.createNewFile()
-//                    val inputStream = resources.openRawResource(imageModel.imageId)
-//                    val outputStream = FileOutputStream(newFile)
-//                    val data = ByteArray(inputStream.available())
-//                    inputStream.read(data)
-//                    outputStream.write(data)
-//                    inputStream.close()
-//                    outputStream.close()
-//                    if (index == 2) {
-//                        showImageDialog()
-//                    }
+                    val inputStream = resources.openRawResource(imageModel.imageId)
+                    val outputStream = FileOutputStream(newFile)
+                    val data = ByteArray(inputStream.available())
+                    inputStream.read(data)
+                    outputStream.write(data)
+                    inputStream.close()
+                    outputStream.close()
+                    if (index == 2) {
+                        showImageDialog()
+                    }
                 } else {
                     if (index == 2) {
                         showImageDialog()
@@ -185,9 +193,11 @@ class MainActivity : AppCompatActivity() {
 //            File(path).delete()
             dialog.dismiss()
         }
-        Glide.with(dialog.context).load(filesArray[0].path).into(binding.ivImage)
-        Glide.with(dialog.context).load(filesArray[1].path).into(binding.ivImage2)
-        Glide.with(dialog.context).load(filesArray[2].path).into(binding.ivImage3)
+        try {
+            Glide.with(dialog.context).load(filesArray[0].path).into(binding.ivImage)
+            Glide.with(dialog.context).load(filesArray[1].path).into(binding.ivImage2)
+            Glide.with(dialog.context).load(filesArray[2].path).into(binding.ivImage3)
+        }catch (e: Exception){}
         dialog.show()
     }
 
