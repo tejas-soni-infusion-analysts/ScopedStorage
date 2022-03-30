@@ -1,15 +1,15 @@
 package com.infusion.scopedstorage
 
 import android.Manifest
-import android.R.attr.mimeType
 import android.app.Dialog
-import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Parcelable
+import android.os.storage.StorageManager
 import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
@@ -149,8 +149,43 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+
+        binding.btnOpenWhatsapp.setOnClickListener {
+            if (Build.VERSION.SDK_INT > 29) {
+                val createOpenDocumentTreeIntent =
+                    (getSystemService(STORAGE_SERVICE) as StorageManager).primaryStorageVolume.createOpenDocumentTreeIntent()
+                val replace =
+                    createOpenDocumentTreeIntent.getParcelableExtra<Parcelable>("android.provider.extra.INITIAL_URI")
+                        .toString().replace("/root/", "/document/")
+                createOpenDocumentTreeIntent.putExtra(
+                    "android.provider.extra.INITIAL_URI", Uri.parse(
+                        "$replace%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses"
+                    )
+                )
+                startActivityForResult(createOpenDocumentTreeIntent, 2001)
+            } else {
+                toast("Fetch files directly from folder")
+            }
+        }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 2001 && resultCode == RESULT_OK) {
+            data?.data?.let {
+                if (it.toString().contains(".Statuses")) {
+                    contentResolver
+                        .takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    if (Build.VERSION.SDK_INT > 29) {
+                        // Load files
+                            toast("Permission accepted fetch files")
+                        return
+                    }
+                    return
+                }
+            }
+        }
+    }
     private fun storeFile(fullPath: String) {
         val path = fullPath + File.separator
         filesArray.clear()

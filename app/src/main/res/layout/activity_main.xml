@@ -69,10 +69,21 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:text="In External Directory"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnOpenWhatsapp"
         app:layout_constraintEnd_toEndOf="@id/btnExternalFilesDirectory"
         app:layout_constraintStart_toStartOf="@id/btnExternalFilesDirectory"
         app:layout_constraintTop_toBottomOf="@id/btnExternalFilesDirectory" />
+
+    <Button
+        android:id="@+id/btnOpenWhatsapp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Whatsapp Folder permission"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintStart_toStartOf="@id/btnExternalFilesDirectory"
+        app:layout_constraintTop_toBottomOf="@id/btnInExternalDirectory" />
 
     <TextView
         android:id="@+id/tvPath"
