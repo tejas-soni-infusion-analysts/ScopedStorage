@@ -151,7 +151,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnOpenWhatsapp.setOnClickListener {
-            if (Build.VERSION.SDK_INT > 29) {
+            if (Build.VERSION.SDK_INT > 29 && contentResolver.persistedUriPermissions.size <= 0) {
                 val createOpenDocumentTreeIntent =
                     (getSystemService(STORAGE_SERVICE) as StorageManager).primaryStorageVolume.createOpenDocumentTreeIntent()
                 val replace =
